@@ -4,97 +4,121 @@
   <meta charset="utf-8">
   <title>EV Charger Dashboard</title>
 
-  <!-- Mobile viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
+      margin: 0;
+      min-height: 100vh;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f0f2f5;
-      margin: 0;
-      padding: 16px;
+      display: flex;
+      flex-direction: column;
     }
 
-    h1 {
+    header {
+      padding: 20px 16px;
       text-align: center;
-      color: #333;
-      font-size: 1.6rem;
-      margin-bottom: 12px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     #chargers {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-top: 16px;
+      grid-template-columns: 1fr;
+      gap: 20px;
     }
 
     .charger-card {
       background: white;
-      padding: 16px;
-      border-radius: 14px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      border-radius: 20px;
+      padding: 24px;
       text-align: center;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
     }
 
     .charger-card strong {
-      font-size: 1.1rem;
+      font-size: 1.4rem;
+      display: block;
     }
 
     .status {
-      font-weight: 700;
-      font-size: 1.2rem;
-      margin-top: 8px;
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-top: 12px;
     }
 
     .AVAILABLE { color: #1a7f37; }
     .CHARGING, .IN_USE { color: #c62828; }
     .ERROR { color: #777; }
 
-    #lastUpdated {
+    footer {
+      padding: 16px;
       text-align: center;
-      margin-top: 16px;
-      font-size: 0.95rem;
+    }
+
+    #lastUpdated {
+      font-size: 1rem;
+      margin-bottom: 12px;
       color: #555;
     }
 
     button {
-      display: block;
       width: 100%;
-      max-width: 320px;
-      margin: 16px auto 0;
-      padding: 14px;
-      font-size: 1rem;
-      font-weight: 600;
+      padding: 18px;
+      font-size: 1.2rem;
+      font-weight: 700;
       border: none;
-      border-radius: 10px;
+      border-radius: 16px;
       background: #007bff;
       color: white;
       cursor: pointer;
     }
 
     button:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
 
+    /* Tablets & desktops */
     @media (min-width: 768px) {
-      h1 {
-        font-size: 1.8rem;
+      #chargers {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       }
 
       button {
-        font-size: 1.05rem;
+        max-width: 360px;
+        margin: 0 auto;
       }
     }
   </style>
 </head>
 <body>
-  <h1>EV Charger Dashboard</h1>
 
-  <div id="chargers"></div>
-  <div id="lastUpdated"></div>
+  <header>
+    <h1>EV Charger Dashboard</h1>
+  </header>
 
-  <button onclick="loadChargers()">Refresh Now</button>
+  <main>
+    <div id="chargers"></div>
+  </main>
+
+  <footer>
+    <div id="lastUpdated"></div>
+    <button onclick="loadChargers()">Refresh Status</button>
+  </footer>
 
   <script>
     async function loadChargers() {
@@ -108,12 +132,10 @@
         data.forEach(c => {
           const card = document.createElement("div");
           card.className = "charger-card";
-
           card.innerHTML = `
-            <div><strong>Charger ${c.id}</strong></div>
+            <strong>Charger ${c.id}</strong>
             <div class="status ${c.status}">${c.status}</div>
           `;
-
           container.appendChild(card);
         });
 
@@ -122,11 +144,12 @@
 
       } catch (e) {
         container.innerHTML =
-          "<div class='ERROR'>Error fetching charger data</div>";
+          "<div class='charger-card ERROR'>Error fetching charger data</div>";
       }
     }
 
     loadChargers();
   </script>
+
 </body>
 </html>
