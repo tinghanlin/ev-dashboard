@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <title>EV Charger Dashboard</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
@@ -96,7 +95,6 @@
       transform: scale(0.97);
     }
 
-    /* Tablets & desktops */
     @media (min-width: 768px) {
       #chargers {
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -111,66 +109,66 @@
 </head>
 <body>
 
-  <header>
-    <h1>EV Charger Dashboard</h1>
-  </header>
+<header>
+  <h1>EV Charger Dashboard</h1>
+</header>
 
-  <main>
-    <div id="chargers"></div>
-  </main>
+<main>
+  <div id="chargers"></div>
+</main>
 
-  <footer>
-    <div id="lastUpdated"></div>
-    <button onclick="loadChargers()">Refresh Status</button>
-  </footer>
+<footer>
+  <div id="lastUpdated"></div>
+  <button onclick="loadChargers()">Refresh Status</button>
+</footer>
 
-  <script>
-    // Desired display order
-    const DISPLAY_ORDER = [1389, 1391, 3232, 3233];
+<script>
+  const DISPLAY_ORDER = [1389, 1391, 3232, 3233];
 
-    async function loadChargers() {
-      const container = document.getElementById("chargers");
-      container.innerHTML = "";
+  async function loadChargers() {
+    const container = document.getElementById("chargers");
+    container.innerHTML = "";
 
-      try {
-        const res = await fetch("/chargers");
-        const data = await res.json();
+    try {
+      const res = await fetch("/chargers");
+      const data = await res.json();
 
-        // Sort explicitly to enforce order
-        data.sort((a, b) =>
-          DISPLAY_ORDER.indexOf(a.id) - DISPLAY_ORDER.indexOf(b.id)
-        );
+      data.sort((a, b) =>
+        DISPLAY_ORDER.indexOf(a.id) - DISPLAY_ORDER.indexOf(b.id)
+      );
 
-        data.forEach(c => {
-          const card = document.createElement("div");
-          card.className = "charger-card";
+      data.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "charger-card";
+        card.dataset.id = c.id;
 
-          card.onclick = () => {
-            window.open(
-              `https://mobile-web.evp.ac/chargers/${c.id}`,
-              "_blank"
-            );
-          };
-
-          card.innerHTML = `
-            <strong>Charger ${c.id}</strong>
-            <div class="status ${c.status}">${c.status}</div>
-          `;
-
-          container.appendChild(card);
+        card.addEventListener("click", function () {
+          const chargerId = this.dataset.id;
+          window.open(
+            `https://mobile-web.evp.ac/chargers/${chargerId}`,
+            "_blank"
+          );
         });
 
-        document.getElementById("lastUpdated").textContent =
-          "Last updated: " + new Date().toLocaleString();
+        card.innerHTML = `
+          <strong>Charger ${c.id}</strong>
+          <div class="status ${c.status}">${c.status}</div>
+        `;
 
-      } catch (e) {
-        container.innerHTML =
-          "<div class='charger-card ERROR'>Error fetching charger data</div>";
-      }
+        container.appendChild(card);
+      });
+
+      document.getElementById("lastUpdated").textContent =
+        "Last updated: " + new Date().toLocaleString();
+
+    } catch (e) {
+      container.innerHTML =
+        "<div class='charger-card ERROR'>Error fetching charger data</div>";
     }
+  }
 
-    loadChargers();
-  </script>
+  loadChargers();
+</script>
 
 </body>
 </html>
