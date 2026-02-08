@@ -1,64 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>EV Charger Dashboard</title>
+
+  <!-- Mobile viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body {
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f0f2f5;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
     }
+
     h1 {
       text-align: center;
       color: #333;
+      font-size: 1.6rem;
+      margin-bottom: 12px;
     }
+
     #chargers {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
     }
+
     .charger-card {
       background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      width: 200px;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
       text-align: center;
-      transition: transform 0.2s;
     }
-    .charger-card:hover {
-      transform: translateY(-5px);
+
+    .charger-card strong {
+      font-size: 1.1rem;
     }
+
     .status {
-      font-weight: bold;
-      font-size: 1.2em;
-      margin-top: 10px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-top: 8px;
     }
-    .AVAILABLE { color: green; }
-    .CHARGING, .IN_USE { color: red; }
-    .ERROR { color: gray; }
+
+    .AVAILABLE { color: #1a7f37; }
+    .CHARGING, .IN_USE { color: #c62828; }
+    .ERROR { color: #777; }
+
     #lastUpdated {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 16px;
+      font-size: 0.95rem;
       color: #555;
     }
+
     button {
       display: block;
-      margin: 20px auto 0 auto;
-      padding: 10px 20px;
-      font-size: 1em;
+      width: 100%;
+      max-width: 320px;
+      margin: 16px auto 0;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 600;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #007bff;
       color: white;
       cursor: pointer;
     }
-    button:hover {
-      background: #0056b3;
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    @media (min-width: 768px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      button {
+        font-size: 1.05rem;
+      }
     }
   </style>
 </head>
@@ -67,12 +93,14 @@
 
   <div id="chargers"></div>
   <div id="lastUpdated"></div>
+
   <button onclick="loadChargers()">Refresh Now</button>
 
   <script>
     async function loadChargers() {
       const container = document.getElementById("chargers");
       container.innerHTML = "";
+
       try {
         const res = await fetch("/chargers");
         const data = await res.json();
@@ -85,6 +113,7 @@
             <div><strong>Charger ${c.id}</strong></div>
             <div class="status ${c.status}">${c.status}</div>
           `;
+
           container.appendChild(card);
         });
 
@@ -92,11 +121,11 @@
           "Last updated: " + new Date().toLocaleString();
 
       } catch (e) {
-        container.innerHTML = "<div class='ERROR'>Error fetching charger data</div>";
+        container.innerHTML =
+          "<div class='ERROR'>Error fetching charger data</div>";
       }
     }
 
-    // Initial load
     loadChargers();
   </script>
 </body>
