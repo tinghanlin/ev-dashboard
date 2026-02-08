@@ -31,9 +31,6 @@
     main {
       flex: 1;
       padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
     }
 
     #chargers {
@@ -48,6 +45,12 @@
       padding: 24px;
       text-align: center;
       box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .charger-card:active {
+      transform: scale(0.97);
     }
 
     .charger-card strong {
@@ -67,12 +70,13 @@
 
     footer {
       padding: 16px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
       text-align: center;
     }
 
     #lastUpdated {
       font-size: 1rem;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       color: #555;
     }
 
@@ -121,6 +125,9 @@
   </footer>
 
   <script>
+    // Desired display order
+    const DISPLAY_ORDER = [1389, 1391, 3232, 3233];
+
     async function loadChargers() {
       const container = document.getElementById("chargers");
       container.innerHTML = "";
@@ -129,13 +136,27 @@
         const res = await fetch("/chargers");
         const data = await res.json();
 
+        // Sort explicitly to enforce order
+        data.sort((a, b) =>
+          DISPLAY_ORDER.indexOf(a.id) - DISPLAY_ORDER.indexOf(b.id)
+        );
+
         data.forEach(c => {
           const card = document.createElement("div");
           card.className = "charger-card";
+
+          card.onclick = () => {
+            window.open(
+              `https://mobile-web.evp.ac/chargers/${c.id}`,
+              "_blank"
+            );
+          };
+
           card.innerHTML = `
             <strong>Charger ${c.id}</strong>
             <div class="status ${c.status}">${c.status}</div>
           `;
+
           container.appendChild(card);
         });
 
