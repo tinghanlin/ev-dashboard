@@ -129,8 +129,19 @@
     const container = document.getElementById("chargers");
     container.innerHTML = "";
 
+    if (window.location.protocol === "file:") {
+      container.innerHTML =
+        "<div class='charger-card ERROR'>Open this dashboard through Flask at http://127.0.0.1:8000/ instead of opening the HTML file directly.</div>";
+      return;
+    }
+
     try {
       const res = await fetch("/chargers");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+      }
+
       const data = await res.json();
 
       data.sort((a, b) =>
@@ -145,7 +156,7 @@
         card.addEventListener("click", function () {
           const chargerId = this.dataset.id;
           window.open(
-            `https://mobile-web.evp.ac/chargers/${chargerId}`,
+            `https://mobile-web.evp.ac/charger/${chargerId}`,
             "_blank"
           );
         });
@@ -163,7 +174,7 @@
 
     } catch (e) {
       container.innerHTML =
-        "<div class='charger-card ERROR'>Error fetching charger data</div>";
+        `<div class='charger-card ERROR'>Error fetching charger data<br><small>${e.message}</small></div>`;
     }
   }
 

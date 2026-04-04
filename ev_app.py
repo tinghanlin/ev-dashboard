@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Explicit charger order
 CHARGER_IDS = [1389, 1391, 3232, 3233]
 
-BASE_URL = "https://emsp.evpassport.com/web/api/v1/locations/chargers/"
+BASE_URL = "https://emsp.evpassport.com/web/api/v2/locations/chargers/"
 
 # Cache setup
 cache = {
@@ -25,6 +25,37 @@ HEADERS = {
     )
 }
 
+
+def fetch_charger_status(charger_id):
+    response = requests.get(
+        BASE_URL + str(charger_id),
+        headers=HEADERS,
+        timeout=5
+    )
+    response.raise_for_status()
+    data = response.json()
+
+    charger = data.get("charger", {})
+    charger_status = charger.get("status")
+
+    if not charger_status:
+        evses = charger.get("evses", [])
+        connector_statuses = [
+            evse.get("status")
+            or evse.get("connector", {}).get("statusLabel")
+            or evse.get("connector", {}).get("status")
+            for evse in evses
+        ]
+        charger_status = next(
+            (status for status in connector_statuses if status),
+            "UNKNOWN"
+        )
+
+    return {
+        "id": charger_id,
+        "status": charger_status
+    }
+
 @app.route("/chargers")
 def get_chargers():
     now = time.time()
@@ -36,28 +67,35 @@ def get_chargers():
 
     for cid in CHARGER_IDS:
         try:
-            response = requests.get(
-                BASE_URL + str(cid),
-                headers=HEADERS,
-                timeout=5
-            )
-            data = response.json()
-
-            charger_status = data["content"]["charger"]["status"]
-
+            results.append(fetch_charger_status(cid))
+        except Exception as exc:
+            app.logger.exception("Failed to fetch charger %s", cid)
             results.append({
                 "id": cid,
-                "status": charger_status
-            })
-
-        except Exception:
-            results.append({
-                "id": cid,
-                "status": "ERROR"
+                "status": "ERROR",
+                "error": str(exc)
             })
 
     cache["data"] = results
     cache["timestamp"] = now
+
+    return jsonify(results)
+
+
+@app.route("/chargers/debug")
+def get_chargers_debug():
+    results = []
+
+    for cid in CHARGER_IDS:
+        try:
+            results.append(fetch_charger_status(cid))
+        except Exception as exc:
+            results.append({
+                "id": cid,
+                "status": "ERROR",
+                "error": str(exc),
+                "url": BASE_URL + str(cid)
+            })
 
     return jsonify(results)
 
