@@ -64,8 +64,9 @@
     }
 
     .AVAILABLE { color: #1a7f37; }
-    .CHARGING, .IN_USE { color: #c62828; }
-    .ERROR { color: #777; }
+    .CHARGING, .IN_USE, .UNAVAILABLE, .PREPARING, .FINISHING,
+    .RESERVED, .FAULTED, .SUSPENDED_EV, .SUSPENDED_EVSE { color: #c62828; }
+    .UNKNOWN, .ERROR { color: #777; }
 
     footer {
       padding: 16px;
@@ -119,13 +120,15 @@
 
 <footer>
   <div id="lastUpdated"></div>
-  <button onclick="loadChargers()">Refresh Status</button>
+  <button id="refreshButton" onclick="loadChargers(true)">Refresh Status</button>
 </footer>
 
 <script>
   const DISPLAY_ORDER = [1389, 1391, 3232, 3233];
+  let loading = false;
 
-  async function loadChargers() {
+  async function loadChargers(forceRefresh = false) {
+    if (loading) return;
     const container = document.getElementById("chargers");
     container.innerHTML = "";
 
@@ -135,8 +138,11 @@
       return;
     }
 
+    loading = true;
+    const refreshButton = document.getElementById("refreshButton");
+    refreshButton.disabled = true;
     try {
-      const res = await fetch("/chargers");
+      const res = await fetch(forceRefresh ? "/chargers?refresh=1" : "/chargers", { cache: "no-store" });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
@@ -152,13 +158,10 @@
         const card = document.createElement("div");
         card.className = "charger-card";
         card.dataset.id = c.id;
+        card.dataset.url = c.url;
 
         card.addEventListener("click", function () {
-          const chargerId = this.dataset.id;
-          window.open(
-            `https://mobile-web.evp.ac/charger/${chargerId}`,
-            "_blank"
-          );
+          window.open(this.dataset.url, "_blank");
         });
 
         card.innerHTML = `
@@ -170,15 +173,21 @@
       });
 
       document.getElementById("lastUpdated").textContent =
-        "Last updated: " + new Date().toLocaleString();
+        (data.some(c => c.status === "ERROR") ? "Some statuses could not be updated: " : "Last updated: ")
+        + new Date().toLocaleString();
 
     } catch (e) {
+      document.getElementById("lastUpdated").textContent = "Update failed";
       container.innerHTML =
         `<div class='charger-card ERROR'>Error fetching charger data<br><small>${e.message}</small></div>`;
+    } finally {
+      loading = false;
+      refreshButton.disabled = false;
     }
   }
 
   loadChargers();
+  setInterval(() => loadChargers(true), 30000);
 </script>
 
 </body>
